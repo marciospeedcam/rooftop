@@ -786,7 +786,7 @@ function render(){
   if(view==="mensal")renderMensal();
   if(view==="eventos")renderEventos();
   if(view==="membros")renderMembros();
-  const fabTxt={caixa:"Despesa",mensal:canApprove()?"Pagar aluguel":"",eventos:"Novo evento",membros:"Novo membro",evento:{resumo:"Despesa",part:"Pessoa",comp:"Despesa",outros:"Entrada/Saída",check:""}[evTab]}[view];
+  const fabTxt={caixa:"Despesa",mensal:"Pagar mensalidade",eventos:"Novo evento",membros:"Novo membro",evento:{resumo:"Despesa",part:"Pessoa",comp:"Despesa",outros:"Entrada/Saída",check:""}[evTab]}[view];
   $("#fab").style.display=canWrite&&fabTxt?"flex":"none";
   $("#fabTxt").textContent=fabTxt||"";
   document.querySelectorAll("#btnNovaCompraGeral,#btnMovAvulso,#btnCfg,#btnEditEv,#btnRatSoc").forEach(b=>b.style.display=canWrite?"":"none");
@@ -862,7 +862,7 @@ function renderMensal(){
   const alug=movs.filter(m=>m.cat==="aluguel"&&(m.mes===mMes||(!m.mes&&m.data.slice(0,7)===mMes)));
   const alugV=alug.reduce((s,m)=>s+m.valor,0);
   $("#mResumo").innerHTML=`<div class="row1"><b>${mesLbl(mMes)}</b><span class="chip ${pagos.length===ativos.length?"g":"a"}">${pagos.length} de ${ativos.length} pagaram</span></div>
-    <div class="row2" style="margin-top:10px"><span class="chip g">Arrecadado ${fmt(arrec)}</span><span class="chip ${alugV?"r":"a"}">${alugV?"Aluguel pago "+fmt(alugV):"Aluguel não pago"}</span><span class="chip">Sobra ${fmt(arrec-alugV)}</span></div>
+    <div class="row2" style="margin-top:10px"><span class="chip g">Arrecadado ${fmt(arrec)}</span><span class="chip ${alugV?"r":"a"}">${alugV?"Aluguel pago "+fmt(alugV):"Aluguel não pago"}</span><span class="chip">Sobra ${fmt(arrec-alugV)}</span>${canApprove()&&!alugV?'<button type="button" class="btn sm ghost" id="btnAlug">Registrar aluguel pago</button>':""}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:8px">${cfg.mensalAuto!==false?`Aluguel ${fmt(cfg.valorAluguel)} ÷ ${nSocios()} sócios = <b>${fmt(valMens())}</b> cada`:`Mensalidade ${fmt(cfg.valorMensalidade)} · Aluguel ${fmt(cfg.valorAluguel)}`}${canApprove()?" · Você é o financeiro: dê OK nos comprovantes em análise.":" · Copie o Pix, pague e anexe o comprovante. O financeiro confirma."}</div>`;
   $("#mList").innerHTML=!ativos.length?'<div style="color:var(--muted);font-size:14px">Nenhum sócio ativo.</div>':ativos.map(m=>{
     const p=mensPaid(m.id,mMes),pp=!p&&pagPend(m.id,mMes),fin=canApprove();
@@ -1013,7 +1013,7 @@ $("#fxMonths").addEventListener("click",ev=>{const b=ev.target.closest("button")
 $("#mMonths").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;mMes=b.dataset.m;render();});
 $("#fab").addEventListener("click",()=>{
   if(view==="caixa")openComp(null,"");
-  else if(view==="mensal")openMov(null,{tipo:"saida",cat:"aluguel",desc:"Pagamento do aluguel – "+mesLbl(mMes),valor:cfg.valorAluguel,mes:mMes});
+  else if(view==="mensal"){const me=meMember();if(me&&mensPaid(me.id,mMes)){toast("Sua mensalidade de "+mesLbl(mMes)+" já está paga ✓");return;}if(me&&pagPend(me.id,mMes)){toast("Seu comprovante já está em análise");return;}openPag(me?me.id:null);}
   else if(view==="eventos")openEv(null);
   else if(view==="membros")openM(null);
   else if(view==="evento"){ if(evTab==="part")openPart(null); else if(evTab==="comp"||evTab==="resumo")openComp(null,curEv); else if(evTab==="outros")openMov(null,{eventId:curEv,cat:"evento"}); }
@@ -1338,6 +1338,7 @@ function openPag(mid){
   $("#pgVal").value=cin(valMens());$("#pgData").value=today();renderFiles("#pgFiles",pgFiles);$("#errPag").textContent="";open("#shPag");
 }
 pickOn("#pgQuem",v=>pg.memberId=v);pickOn("#pgMes",v=>pg.mes=v);bindFiles("#pgFiles",()=>pgFiles);
+$("#mResumo").addEventListener("click",ev=>{if(ev.target.closest("#btnAlug"))openMov(null,{tipo:"saida",cat:"aluguel",desc:"Pagamento do aluguel – "+mesLbl(mMes),valor:cfg.valorAluguel,mes:mMes});});
 $("#mPix").addEventListener("click",ev=>{if(ev.target.closest("#btnPag")){const me=meMember();if(me&&(mensPaid(me.id,mMes)||pagPend(me.id,mMes))){toast("Já está registrado para "+mesLbl(mMes));return;}openPag(me?me.id:null);}});
 $("#formPag").addEventListener("submit",async ev=>{
   ev.preventDefault();if(saving)return;if(uploading){$("#errPag").textContent="Espere o comprovante terminar de enviar.";return;}
