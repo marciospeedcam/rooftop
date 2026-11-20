@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Cinzel:wght@900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
+html{background:#050505}
 body{margin:0;background:radial-gradient(ellipse at 50% 0%,#3a0707 0%,#0b0303 45%,#050505 100%) fixed;color:#f5ecd6;font-family:Oswald,system-ui,sans-serif;min-height:100vh}
 .wrap{max-width:520px;margin:0 auto;padding:18px 16px 40px}
 .cover{width:100%;aspect-ratio:4/5;border-radius:18px;display:block;box-shadow:0 20px 50px rgba(0,0,0,.7),0 0 0 2px rgba(242,201,76,.5);background:#111}
@@ -26,20 +27,72 @@ button.ok{background:#16a34a}
 ol{margin:0;padding-left:22px;font-size:17px;line-height:1.55;color:#e9dfc7}
 .foot{text-align:center;color:#8b8478;font-size:13px;margin-top:24px}
 .err{text-align:center;padding:60px 20px;font-size:18px}
-</style></head><body><div class="wrap" id="app">
+.share{display:flex;gap:8px;margin-top:12px}
+.share button{flex:1}
+button.gold{background:linear-gradient(180deg,#ffe9a6,#d9a52e);color:#1e1200}
+button.ghost{background:transparent;border:1.5px solid #f2c94c;color:#ffe7a0}
+.addr{display:flex;align-items:center;gap:10px;background:#0b0b0f;border:1.5px solid rgba(242,201,76,.5);border-radius:14px;padding:12px}
+.addr .k{flex:1;min-width:0;font-size:17px;font-weight:600}
+.addr .k small{display:block;font-size:13px;color:#a8a29e;font-weight:500}
+.addr a{border-radius:12px;padding:13px 14px;font:700 15px Oswald,sans-serif;background:#e10600;color:#fff;text-decoration:none;white-space:nowrap}
+label.f{display:block;font-size:14px;color:#cfc6b2;margin:12px 0 6px}
+.in{width:100%;background:#0b0b0f;border:1.5px solid rgba(242,201,76,.45);border-radius:12px;padding:12px;color:#f5ecd6;font:500 17px Oswald,sans-serif}
+.in:focus{outline:none;border-color:#f2c94c}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:48px;padding:10px 0;font-size:22px;background:#2a1a00;border:1.5px solid #f2c94c;color:#ffe7a0}
+.qty b{min-width:36px;text-align:center;font-size:24px}
+.file{display:flex;align-items:center;gap:10px;border:1.5px dashed rgba(242,201,76,.6);border-radius:12px;padding:12px;cursor:pointer;color:#ffe7a0;font-size:16px}
+.file img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+.msg{font-size:15px;margin-top:10px;min-height:1em}
+.msg.e{color:#fca5a5}.msg.o{color:#86efac}
+.send{width:100%;margin-top:14px;font-size:18px}
+.done{background:rgba(22,163,74,.15);border:1px solid #16a34a;border-radius:14px;padding:14px;font-size:16px;color:#bbf7d0}
+.lista{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.lista li{background:rgba(242,201,76,.12);color:#ffe7a0;border-radius:999px;padding:5px 12px;font-size:15px}
+.cnt{color:#a8a29e;font-size:14px;font-weight:500}
+.voltar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;background:#0b0b0f;border-bottom:2px solid #e10600;padding:10px max(16px,env(safe-area-inset-left)) 10px max(16px,env(safe-area-inset-right));padding-top:calc(10px + env(safe-area-inset-top))}
+.voltar button{background:transparent;color:#fff;padding:6px 4px;font-size:18px}
+</style></head><body><div class="voltar" id="barVoltar" hidden><button type="button" id="btnVoltar">‹ Voltar ao app</button></div><div class="wrap" id="app">
 <img class="cover" id="capa" alt="Capa do evento Rooftop Interlagos">
-<div class="tip">Toque e segure na imagem para salvar ou compartilhar.</div>
+<div class="share"><button type="button" class="gold" id="btnShare">Compartilhar convite</button><button type="button" class="ghost" id="btnZap">WhatsApp</button></div>
+<div class="tip">Ou toque e segure na imagem para salvar.</div>
 <div class="card">
 <h1 id="tit">ROOFTOP INTERLAGOS</h1>
 <div class="info" id="info"></div>
 <div class="price"><small>R$</small> <b id="val">100,00</b> <small>por pessoa</small></div>
+<h2>Endereço</h2>
+<div class="addr"><div class="k"><small>Rooftop Interlagos</small>Av. do Jangadeiro, 794 – Cidade Dutra, São Paulo</div><a href="https://www.google.com/maps/search/?api=1&amp;query=Av.%20do%20Jangadeiro%2C%20794%20-%20Cidade%20Dutra%2C%20S%C3%A3o%20Paulo" target="_blank" rel="noopener">Ver no mapa</a></div>
 <h2>Pague pelo Pix</h2>
 <div class="pix"><div class="k"><small>Chave Pix (e-mail)</small><span id="pixk">rchreis@gmail.com</span></div><button id="cp" type="button">Copiar</button></div>
 <h2>Como confirmar</h2>
-<ol><li>Copie a chave Pix acima e pague <b id="val2">R$ 100,00</b> por pessoa.</li><li>Envie o comprovante, com o seu nome, para quem te convidou.</li><li>Pronto: seu nome entra na lista do encontro.</li></ol>
+<ol><li>Copie a chave Pix acima e pague <b id="val2">R$ 100,00</b> por pessoa.</li><li>Envie o comprovante aqui embaixo, com o seu nome.</li><li>Quando o pagamento for conferido, seu nome entra na lista do encontro.</li></ol>
+</div>
+<div class="card" id="cardEnvio">
+<h2 style="margin-top:0">Já pagou? Envie o comprovante</h2>
+<form id="fEnv" autocomplete="off">
+<label class="f" for="eNome">Seu nome</label>
+<input class="in" id="eNome" maxlength="50" placeholder="Nome e sobrenome">
+<label class="f" for="eFone">WhatsApp (opcional)</label>
+<input class="in" id="eFone" maxlength="20" inputmode="tel" placeholder="(11) 90000-0000">
+<label class="f">Quantas pessoas você pagou?</label>
+<div class="qty"><button type="button" id="qMenos" aria-label="Menos uma pessoa">−</button><b id="qVal">1</b><button type="button" id="qMais" aria-label="Mais uma pessoa">+</button><span class="cnt" id="qTot"></span></div>
+<label class="f">Comprovante do Pix (foto ou PDF)</label>
+<label class="file" for="eArq" id="eArqLbl"><span>📎 Toque para escolher o comprovante</span></label>
+<input type="file" id="eArq" accept="image/*,application/pdf" hidden>
+<div class="msg" id="eMsg" role="status"></div>
+<button type="submit" class="send" id="eBtn">Enviar comprovante</button>
+</form>
+<div class="done" id="eDone" hidden></div>
+</div>
+<div class="card" id="cardLista" hidden>
+<h2 style="margin-top:0">Lista do encontro <span class="cnt" id="lCnt"></span></h2>
+<ul class="lista" id="lNomes"></ul>
 </div>
 <div class="foot">Confirmação e pagamento antecipados para organização do encontro.</div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 /* Desenha a capa do evento Rooftop num <canvas> 1080x1350. opts: {title, date, price, line1a, line1b, line2a, line2b} */
 function drawRooftopPoster(cv, o, logo){
@@ -126,9 +179,9 @@ var ROOFTOP_TIPOS={q:{title:"QUINTA ROOFTOP",l1a:"Sempre a última quinta",l1b:"
 function rooftopOpts(code,dd,mm,reais){var t=ROOFTOP_TIPOS[code]||ROOFTOP_TIPOS.q;return{title:t.title,date:dd+"/"+mm,price:Number(reais).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}),line1a:t.l1a,line1b:t.l1b,line2a:t.l2a,line2b:t.l2b};}
 
 var PIX="rchreis@gmail.com";
-var m=(location.hash||"").match(/^#ev-(\d{2})(\d{2})-(\d{1,5})-(q|f1|fe|ou)$/);
-if(!m){m=[null,"26","11","100","q"];}
-var dd=m[1],mm=m[2],reais=+m[3],code=m[4];
+var m=(location.hash||"").match(/^#ev-(\d{2})(\d{2})-(\d{1,5})-(q|f1|fe|ou)(?:-([A-Za-z0-9_]{1,60}))?$/);
+if(!m){m=[null,"26","11","100","q",""];}
+var dd=m[1],mm=m[2],reais=+m[3],code=m[4],EVID=m[5]||"",EVKEY=dd+mm+"-"+reais+"-"+code;
 var op=rooftopOpts(code,dd,mm,reais);
 document.getElementById("tit").textContent=op.title+" · "+op.date;
 document.title="Convite – "+op.title+" "+op.date;
@@ -146,5 +199,77 @@ document.getElementById("cp").addEventListener("click",async function(){
   setTimeout(function(){b.textContent="Copiar";b.classList.remove("ok");},2500);
 });
 window.addEventListener("hashchange",function(){location.reload();});
+
+/* ---------- voltar ao app (só para quem abriu pelo app) ---------- */
+(function(){
+  var base=location.href.split("#")[0].replace(/convite\.html.*$/,""),veio=false;
+  try{veio=document.referrer&&document.referrer.indexOf(base)===0&&document.referrer.indexOf("convite.html")<0;if(veio)sessionStorage.setItem("rt_doapp","1");else veio=sessionStorage.getItem("rt_doapp")==="1";}catch(e){}
+  if(!veio)return;
+  document.getElementById("barVoltar").hidden=false;
+  document.getElementById("btnVoltar").onclick=function(){if(history.length>1&&document.referrer.indexOf(base)===0)history.back();else location.href=base;};
+})();
+/* ---------- compartilhar ---------- */
+var shareTxt="Convite: "+op.title+" · "+op.date+" – Rooftop Interlagos\nR$ "+op.price+" por pessoa. Pague pelo Pix e envie o comprovante pelo link:";
+document.getElementById("btnShare").addEventListener("click",async function(){
+  if(navigator.share){try{await navigator.share({title:document.title,text:shareTxt,url:location.href});return;}catch(e){if(e&&e.name==="AbortError")return;}}
+  try{await navigator.clipboard.writeText(shareTxt+" "+location.href);this.textContent="Link copiado ✓";var b=this;setTimeout(function(){b.textContent="Compartilhar convite";},2500);}catch(e){location.href="https://wa.me/?text="+encodeURIComponent(shareTxt+" "+location.href);}
+});
+document.getElementById("btnZap").addEventListener("click",function(){location.href="https://wa.me/?text="+encodeURIComponent(shareTxt+" "+location.href);});
+
+/* ---------- envio do comprovante (Firebase, mesmo banco do app) ---------- */
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var ROOT="apps/rooftop/",fs=null,authP=null;
+  try{firebase.initializeApp({apiKey:"AIzaSyAXG92z-C6w65Zok67HLcKp-oj8VMip7YY",authDomain:"jb-despesas.firebaseapp.com",projectId:"jb-despesas",storageBucket:"jb-despesas.firebasestorage.app",messagingSenderId:"815638515657",appId:"1:815638515657:web:7679d52ade0d5576752218"});
+    fs=firebase.firestore();var au=firebase.auth();
+    authP=new Promise(function(res,rej){var d=false;au.onAuthStateChanged(function(u){if(u&&!d){d=true;res(u);}});au.signInAnonymously().catch(function(e){if(!d)rej(e);});});
+  }catch(e){authP=Promise.reject(e);}
+  authP.catch(function(){});
+  var qtd=1,arq=null,KEY="rt_env_"+EVKEY+(EVID?"_"+EVID:"");
+  function q(){$("qVal").textContent=qtd;$("qTot").textContent="Total R$ "+(qtd*reais).toLocaleString("pt-BR",{minimumFractionDigits:2});}
+  $("qMenos").onclick=function(){if(qtd>1){qtd--;q();}};
+  $("qMais").onclick=function(){if(qtd<20){qtd++;q();}};q();
+  function msg(t,c){var e=$("eMsg");e.textContent=t||"";e.className="msg"+(c?" "+c:"");}
+  $("eArq").addEventListener("change",function(){
+    arq=this.files&&this.files[0]||null;var l=$("eArqLbl");l.replaceChildren();
+    if(!arq){l.append("📎 Toque para escolher o comprovante");return;}
+    if(/^image\//.test(arq.type)){var im=document.createElement("img");im.src=URL.createObjectURL(arq);im.alt="";l.append(im);}
+    var s=document.createElement("span");s.textContent=arq.name||"Comprovante";l.append(s);
+  });
+  function toDataURL(f){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=rej;r.readAsDataURL(f);});}
+  function shrink(f,max,qq){return new Promise(function(res,rej){var u=URL.createObjectURL(f),im=new Image();im.onload=function(){var s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL("image/jpeg",qq));};im.onerror=rej;im.src=u;});}
+  function feito(nome){$("fEnv").hidden=true;var d=$("eDone");d.hidden=false;d.textContent="✓ Comprovante de "+nome+" recebido! Assim que o pagamento for conferido, seu nome aparece na lista do encontro.";}
+  try{var sv=localStorage.getItem(KEY);if(sv)feito(sv);}catch(e){}
+  $("fEnv").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var nome=$("eNome").value.trim().slice(0,50),fone=$("eFone").value.trim().slice(0,20);
+    if(!nome){msg("Coloque o seu nome.","e");return;}
+    if(!arq){msg("Escolha a foto ou o PDF do comprovante.","e");return;}
+    var b=$("eBtn");b.disabled=true;msg("Enviando…");
+    try{
+      await authP;
+      var img=/^image\//.test(arq.type);
+      var data=img?await shrink(arq,1400,.72):await toDataURL(arq);
+      if(img&&data.length>900000)data=await shrink(arq,1000,.55);
+      if(data.length>1000000)throw{code:"grande"};
+      var aid="a"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),tipo=img?"image/jpeg":(arq.type||"application/pdf");
+      await fs.doc(ROOT+"arquivos/"+aid).set({data:data,type:tipo,name:"Comprovante "+nome.slice(0,60),em:Date.now()});
+      await fs.collection(ROOT+"inscricoes").add({eventId:EVID,evKey:EVKEY,evTitulo:op.title+" "+op.date,name:nome,fone:fone,qtd:qtd,valor:qtd*reais*100,arquivoId:aid,arquivoType:tipo,status:"pendente",createdAt:Date.now()});
+      try{localStorage.setItem(KEY,nome);}catch(e){}
+      feito(nome);
+    }catch(e){
+      msg(e&&e.code==="grande"?"O arquivo é grande demais. Mande uma foto (print) do comprovante.":"Não foi possível enviar agora. Confira a internet e tente de novo.","e");
+    }
+    b.disabled=false;
+  });
+  /* lista de quem já pagou (só quando o link tem o código do evento) */
+  if(EVID){authP.then(function(){
+    fs.collection(ROOT+"participantes").where("eventId","==",EVID).onSnapshot(function(s){
+      var n=s.docs.map(function(d){return d.data()||{};}).filter(function(x){return x.pago&&x.name;}).sort(function(a,b){return (a.ordem||0)-(b.ordem||0);});
+      $("cardLista").hidden=!n.length;$("lCnt").textContent="("+n.length+")";
+      var ul=$("lNomes");ul.replaceChildren();n.forEach(function(x){var li=document.createElement("li");li.textContent=String(x.name).slice(0,60);ul.append(li);});
+    },function(){});
+  }).catch(function(){});}
+})();
 </script>
 </body></html>

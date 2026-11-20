@@ -255,7 +255,7 @@ body{padding-top:0}
       <button data-t="check">Checklist</button>
     </div>
     <div id="tResumo"><div class="box" id="rsHead" style="margin-bottom:10px"></div><div class="box" id="rsBal"></div><h2>Gastos por categoria</h2><div class="box" id="rsCat"></div><h2 id="rsPendH">Reembolsos deste evento</h2><div class="list" id="rsPend"></div></div>
-    <div id="tPart" class="hide"><div class="sum" id="pSum"></div><div class="list" id="pList"></div></div>
+    <div id="tPart" class="hide"><div id="pInsc" style="margin-bottom:12px"></div><div class="sum" id="pSum"></div><div class="list" id="pList"></div></div>
     <div id="tComp" class="hide"><div class="sum" id="cpSum"></div><div class="list" id="cpList"></div></div>
     <div id="tOutros" class="hide"><div class="sum" id="oSum"></div><div class="list" id="oList"></div></div>
     <div id="tCheck" class="hide">
@@ -691,12 +691,16 @@ let cfg={pixRooftop:"",valorMensalidade:12500,valorAluguel:100000,aprovadorId:""
 let pags=[],amOwner=false;
 let user=null,meId=null,aprovName="",approved=new Map(),unsubAprov=null;
 let members=[],events=[],movs=[],parts=[],comps=[],checks=[];
-const loaded={m:false,e:false,v:false,p:false,c:false,k:false,g:false};
+const loaded={m:false,e:false,v:false,p:false,c:false,k:false,g:false,i:false};
+let inscs=[];
 const ready=()=>Object.values(loaded).every(Boolean);
 let rsMsg="";
 const CONVITE_BASE=new URL("convite.html",location.href).href.split("#")[0];
 const TCODE={churrasco:"q",f1:"f1",festa:"fe",outro:"ou"};
-function autoLink(e){if(!e.date)return"";const[y,m,d]=e.date.split("-");return CONVITE_BASE+"#ev-"+d+m+"-"+Math.round((e.convite||0)/100)+"-"+(TCODE[e.tipo]||"ou");}
+function evKey(e){if(!e||!e.date)return"";const[y,m,d]=e.date.split("-");return d+m+"-"+Math.round((e.convite||0)/100)+"-"+(TCODE[e.tipo]||"ou");}
+function autoLink(e){if(!e.date)return"";return CONVITE_BASE+"#ev-"+evKey(e)+"-"+e.id;}
+function inscPend(evId){const e=evById(evId);if(!e)return[];const k=evKey(e);return inscs.filter(i=>i.status==="pendente"&&(i.eventId?i.eventId===evId:(k&&i.evKey===k)));}
+async function shareEv(e){const url=effLink(e);const txt=rsMsg.replace(/\n👉 .*$/,"");if(navigator.share){try{await navigator.share({title:e.name,text:txt,url:url||undefined});return;}catch(er){if(er&&er.name==="AbortError")return;}}location.href="https://wa.me/?text="+encodeURIComponent(rsMsg);}
 function effLink(e){return e.link&&!e.link.startsWith(CONVITE_BASE)?e.link:autoLink(e);}
 const coverCache={};let posterLogo=null,posterReady=false;
 function coverUrl(e){
@@ -796,7 +800,8 @@ function render(){
   $("#fabTxt").textContent=fabTxt||"";
   document.querySelectorAll("#btnNovaCompraGeral,#btnMovAvulso,#btnCfg,#btnEditEv,#btnRatSoc").forEach(b=>b.style.display=canWrite?"":"none");
 }
-function renderAvisos(){
+function renderAvisos(){renderAvisos0();const ip=events.map(e=>({e,n:inscPend(e.id).length})).filter(x=>x.n);if(ip.length)$("#avisos").insertAdjacentHTML("afterbegin",'<div class="aviso">'+ip.map(x=>`<div class="it" data-goev="${esc(x.e.id)}" data-tab="part"><span>📎 Comprovante${x.n>1?"s":""} do convite para conferir</span><b>${esc(x.e.name)} · ${x.n}</b></div>`).join("")+"</div>");}
+function renderAvisos0(){
   const me=meMember();
   const npg=canApprove()?pags.filter(g=>g.status==="pendente").length:0;
   if(!me&&!npg){$("#avisos").innerHTML="";return;}
@@ -888,7 +893,7 @@ function renderEventos(){
   $("#evList").innerHTML=!ready()&&!evs.length?'<div class="empty">Carregando…</div>':!evs.length?'<div class="empty">Nenhum evento ainda.</div>':evs.map(e=>{
     const c=evCalc(e.id);
     return `<div class="item" data-ev="${esc(e.id)}">${coverUrl(e)?`<img src="${esc(coverUrl(e))}" alt="" style="width:52px;height:65px;object-fit:cover;border-radius:8px;flex:none">`:""}<div class="body"><div class="row1"><div class="name">${esc(e.name)}</div><div class="val ${c.saldo<0?"r":"g"}">${fmt(c.saldo)}</div></div>
-      <div class="row2">${e.date?`<span class="chip">${fmtDateY(e.date)}</span>`:""}<span class="chip b">${TIPOS[e.tipo]||"Evento"}</span><span class="chip">${c.P.length} pessoa${c.P.length!==1?"s":""}</span>${c.pend?`<span class="chip r">reembolsar ${fmt(c.pend)}</span>`:""}${c.aReceber?`<span class="chip a">a receber ${fmt(c.aReceber)}</span>`:""}</div></div></div>`;
+      <div class="row2">${e.date?`<span class="chip">${fmtDateY(e.date)}</span>`:""}<span class="chip b">${TIPOS[e.tipo]||"Evento"}</span><span class="chip">${c.P.length} pessoa${c.P.length!==1?"s":""}</span>${inscPend(e.id).length?`<span class="chip r">📎 ${inscPend(e.id).length} comprovante${inscPend(e.id).length>1?"s":""}</span>`:""}${c.pend?`<span class="chip r">reembolsar ${fmt(c.pend)}</span>`:""}${c.aReceber?`<span class="chip a">a receber ${fmt(c.aReceber)}</span>`:""}</div></div></div>`;
   }).join("");
 }
 function renderEvento(){
@@ -899,10 +904,10 @@ function renderEvento(){
   $("#sL1").textContent="Arrecadado";$("#sV1").textContent=fmt(c.entradas);$("#sL2").textContent="Gastos";$("#sV2").textContent=fmt(c.saidas);
   ["resumo","part","comp","outros","check"].forEach(t=>$("#t"+{resumo:"Resumo",part:"Part",comp:"Comp",outros:"Outros",check:"Check"}[t]).classList.toggle("hide",evTab!==t));
   const pendLib=c.C.filter(x=>pendente(x)>0&&liberado(x)).reduce((s,x)=>s+pendente(x),0),pendBloq=c.pend-pendLib;
-  const msg=`*${e.name}* – Rooftop Interlagos\n📅 ${e.date?fmtDateY(e.date):""} · 18h às 22h\n💰 ${fmt(e.convite||0)} por pessoa\n🔑 Pix: ${cfg.pixRooftop}\nEnvie o comprovante com seu nome.${effLink(e)?"\n👉 "+effLink(e):""}`;
+  const msg=`*${e.name}* – Rooftop Interlagos\n📅 ${e.date?fmtDateY(e.date):""} · 18h às 22h\n💰 ${fmt(e.convite||0)} por pessoa\n🔑 Pix: ${cfg.pixRooftop}\nPague pelo Pix e envie o comprovante pelo link do convite.${effLink(e)?"\n👉 "+effLink(e):""}`;
   rsMsg=msg;
   const cu=coverUrl(e),lk=effLink(e);
-  $("#rsHead").innerHTML=`<div class="evhead">${cu?`<a href="${esc(lk||cu)}" target="_blank" rel="noopener"><img src="${esc(cu)}" alt="Capa do evento"></a>`:`<div class="nofoto">${e.date?"Gerando capa…":"Coloque a data do evento para gerar a capa"}</div>`}<div style="flex:1;min-width:0"><h3>${esc(e.name)}</h3><div class="row2"><span class="chip">${e.date?fmtDateY(e.date):"sem data"}</span><span class="chip b">${TIPOS[e.tipo]||"Evento"}</span>${e.convite?`<span class="chip g">${fmt(e.convite)} / pessoa</span>`:""}</div>${e.note?`<div class="desc" style="margin-top:8px">${esc(e.note)}</div>`:""}<div class="shbtns">${lk?`<a class="btn sm pri" href="${esc(lk)}" target="_blank" rel="noopener">Abrir convite / capa</a><button type="button" class="btn sm ghost" data-copy="link">Copiar link</button>`:""}<button type="button" class="btn sm ghost" data-copy="msg">Copiar mensagem c/ Pix</button></div></div></div>`;
+  $("#rsHead").innerHTML=`<div class="evhead">${cu?`<a href="${esc(lk||cu)}"${lk?"":` target="_blank" rel="noopener"`}><img src="${esc(cu)}" alt="Capa do evento"></a>`:`<div class="nofoto">${e.date?"Gerando capa…":"Coloque a data do evento para gerar a capa"}</div>`}<div style="flex:1;min-width:0"><h3>${esc(e.name)}</h3><div class="row2"><span class="chip">${e.date?fmtDateY(e.date):"sem data"}</span><span class="chip b">${TIPOS[e.tipo]||"Evento"}</span>${e.convite?`<span class="chip g">${fmt(e.convite)} / pessoa</span>`:""}</div>${e.note?`<div class="desc" style="margin-top:8px">${esc(e.note)}</div>`:""}<div class="shbtns"><button type="button" class="btn sm grn" data-share="1">Compartilhar convite</button>${lk?`<a class="btn sm pri" href="${esc(lk)}">Abrir convite / capa</a><button type="button" class="btn sm ghost" data-copy="link">Copiar link</button>`:""}<button type="button" class="btn sm ghost" data-copy="msg">Copiar mensagem c/ Pix</button></div></div></div>`;
   $("#rsBal").innerHTML=`<div class="bal"><div><small>Convites pagos</small><b style="color:var(--green)">${fmt(c.arrec)}</b></div><div><small>Outras entradas</small><b style="color:var(--green)">${fmt(c.outE)}</b></div><div><small>Compras</small><b style="color:var(--red)">${fmt(c.gasto)}</b></div><div><small>Outras saídas</small><b style="color:var(--red)">${fmt(c.outS)}</b></div><div class="full"><small>Saldo do evento</small><b style="font-size:24px;color:${c.saldo<0?"#f87171":"#4ade80"}">${fmt(c.saldo)}</b></div><div><small>Reembolsar (com nota/aprovado)</small><b>${fmt(pendLib)}</b></div><div><small>Aguardando nota</small><b style="color:var(--amber)">${fmt(pendBloq)}</b></div><div><small>A receber de convites</small><b>${fmt(c.aReceber)}</b></div><div><small>Saldo após acertos</small><b>${fmt(c.saldo+c.aReceber)}</b></div>${c.rateado?`<div class="full" style="background:#f8fafc;color:var(--ink)"><small style="color:var(--muted)">Rateado entre membros (fora do caixa)</small><b>${fmt(c.rateado)}</b></div>`:""}</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Saldo = convites + outras entradas − compras − outras saídas.</div>`;
   $("#rsCat").innerHTML=catHtml(catRows(c.C,c.O));
   const PC=c.C.filter(x=>pendente(x)>0||(x.rateio&&rateioShares(x).some(sh=>sh.id!==x.quem&&!x.rateioPagos[sh.id])));
@@ -911,6 +916,9 @@ function renderEvento(){
   document.querySelectorAll("#evTabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===evTab));
   // pessoas
   const P=c.P.slice().sort((a,b)=>a.ordem-b.ordem||a.createdAt-b.createdAt);
+  const IP=inscPend(e.id);
+  const tbP=document.querySelector('#evTabs button[data-t="part"]');if(tbP)tbP.textContent=IP.length?`Pessoas (${IP.length})`:"Pessoas";
+  $("#pInsc").innerHTML=!IP.length?"":`<h2 style="margin-top:0">Comprovantes recebidos pelo convite</h2><div class="list">`+IP.map(i=>`<div class="pend"><div class="grow"><b>${esc(i.name)}</b>${i.qtd>1?` <span class="chip">${i.qtd} pessoas</span>`:""}<div class="sub" style="font-size:12px;color:var(--muted)">${fmt(i.valor)}${i.fone?" · "+esc(i.fone):""} · ${new Date(i.createdAt).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div><div class="row2"><a class="chip b" href="${esc(blobUrl(i.arquivoId))}" target="_blank" rel="noopener">📎 Ver comprovante</a></div></div>${canWrite?`<div style="display:flex;flex-direction:column;gap:6px"><button type="button" class="btn sm grn" data-insok="${esc(i.id)}">Confirmar</button><button type="button" class="btn sm ghost" data-insno="${esc(i.id)}">Recusar</button></div>`:""}</div>`).join("")+`</div>`;
   $("#pSum").innerHTML=P.length?`<span>${P.length} pessoas · ${P.filter(p=>p.pago).length} pagaram</span><span>${fmt(c.arrec)}</span>`:"";
   $("#pList").innerHTML=!P.length?'<div class="empty">Ninguém ainda. Toque em <b>+ Pessoa</b>.</div>':P.map(p=>`<div class="item" data-pt="${esc(p.id)}"><button class="ck ${p.pago?"on":""}" data-act="pago" aria-label="Pago"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></button><div class="body"><div class="row1"><div class="name">${esc(p.name)}</div><div class="val">${fmt(p.valor)}</div></div><div class="row2">${p.pago?`<span class="chip ${NO_CAIXA_FORMAS.includes(p.forma)?"b":"g"}">${FORMAS[p.forma]||"Pago"}${p.data?" · "+fmtDate(p.data):""}</span>`:`<span class="chip a">${p.confirmado?"confirmado · ":""}não pagou</span>`}${p.obs?`<span class="chip">${esc(p.obs)}</span>`:""}</div></div></div>`).join("");
   // compras
@@ -1005,7 +1013,7 @@ $("#rsPend").addEventListener("click",ev=>{const r=ev.target.closest("[data-cp]"
 $("#btnMovAvulso").addEventListener("click",()=>openMov(null,{}));
 $("#btnRatSoc").addEventListener("click",()=>{openComp(null,"");cp.rateio=true;cp.rateioIds=members.filter(m=>m.ativo).map(m=>m.id);$("#cpTitle").textContent="Nova despesa rateada";cpUI();});
 $("#mRat").addEventListener("click",ev=>{const r=ev.target.closest("[data-cp]");if(!r||!canWrite)return;const c=comps.find(x=>x.id===r.dataset.cp);if(c)openComp(c);});
-$("#rsHead").addEventListener("click",async ev=>{const b=ev.target.closest("[data-copy]");if(!b)return;const e=evById(curEv);if(!e)return;const t=b.dataset.copy==="link"?effLink(e):rsMsg;try{await navigator.clipboard.writeText(t);toast(b.dataset.copy==="link"?"Link copiado":"Mensagem copiada – cole no WhatsApp");}catch(err){toast("Não deu para copiar");}});
+$("#rsHead").addEventListener("click",async ev=>{if(ev.target.closest("[data-share]")){const e0=evById(curEv);if(e0)shareEv(e0);return;}const b=ev.target.closest("[data-copy]");if(!b)return;const e=evById(curEv);if(!e)return;const t=b.dataset.copy==="link"?effLink(e):rsMsg;try{await navigator.clipboard.writeText(t);toast(b.dataset.copy==="link"?"Link copiado":"Mensagem copiada – cole no WhatsApp");}catch(err){toast("Não deu para copiar");}});
 $("#avisos").addEventListener("click",ev=>{if(ev.target.closest("[data-gomens]")){view="mensal";mMes=curMes();render();window.scrollTo(0,0);return;}const it=ev.target.closest("[data-goev]");if(!it)return;if(it.dataset.goev){view="evento";curEv=it.dataset.goev;evTab=it.dataset.tab||"resumo";}else{view="caixa";curEv=null;}render();window.scrollTo(0,0);});
 $("#rtList").addEventListener("click",async ev=>{
   const o=ev.target.closest("[data-ratopen]");if(o){const c=comps.find(x=>x.id===o.dataset.ratopen);if(c)openComp(c);return;}
@@ -1180,6 +1188,19 @@ $("#formPart").addEventListener("submit",async ev=>{
     await savePart({...pt,id,eventId:pt.eventId||curEv,name,valor,data:$("#ptData").value||today(),obs:$("#ptObs").value.trim().slice(0,120)});
     toast("Salvo");close();
   }catch(e){wErr(e,"#errPart");}finally{saving=false;$("#btnSavePart").disabled=false;}
+});
+$("#pInsc").addEventListener("click",async ev=>{
+  const ok=ev.target.closest("[data-insok]"),no=ev.target.closest("[data-insno]");if((!ok&&!no)||!canWrite)return;
+  const i=inscs.find(x=>x.id===(ok||no).dataset[ok?"insok":"insno"]);if(!i||busy.has(i.id))return;busy.add(i.id);
+  try{
+    if(no){await db.collection("inscricoes").doc(i.id).update({status:"recusado",em:Date.now()});toast("Comprovante recusado");return;}
+    const e=evById(curEv);const id=newId("p");
+    const p={id,eventId:curEv,name:(i.qtd>1?`${i.name} (+${i.qtd-1})`:i.name).slice(0,60),valor:i.valor||(e?e.convite*i.qtd:0),confirmado:true,pago:true,forma:"pix",data:today(),obs:("Pago pelo convite"+(i.fone?" · "+i.fone:"")).slice(0,120),movId:"",ordem:Date.now(),createdAt:Date.now()};
+    await savePart(p);
+    if(p.movId&&i.arquivoId){try{await db.collection("movimentos").doc(p.movId).update({files:[{id:i.arquivoId,type:i.arquivoType||"image/jpeg",name:"Comprovante "+i.name.slice(0,60)}]});}catch(er){}}
+    await db.collection("inscricoes").doc(i.id).update({status:"confirmado",partId:id,em:Date.now()});
+    toast(`${i.name} entrou na lista ✓`);
+  }catch(er){wErr(er);}finally{busy.delete(i.id);}
 });
 $("#pList").addEventListener("click",async ev=>{
   const r=ev.target.closest("[data-pt]");if(!r||!canWrite)return;const p=parts.find(x=>x.id===r.dataset.pt);if(!p)return;
@@ -1385,6 +1406,7 @@ const MAP={
   membros:d=>{const x=d.data()||{};return{id:d.id,name:S(x.name,40)||"?",pix:S(x.pix,80),ativo:x.ativo!==false,userId:S(x.userId,200),createdAt:N(x.createdAt)};},
   eventos:d=>{const x=d.data()||{};const f=x.foto&&typeof x.foto.id==="string"?{id:S(x.foto.id,200),type:S(x.foto.type,60),url:blobUrl(S(x.foto.id,200))}:null;const lk=/^https:\/\//.test(x.link||"")?S(x.link,300):"";return{foto:f,link:lk,id:d.id,name:S(x.name,80)||"Evento",date:isoOk(x.date),note:S(x.note,500),convite:C(x.convite),tipo:TIPOS[x.tipo]?x.tipo:"outro",createdAt:N(x.createdAt)};},
   movimentos:d=>{const x=d.data()||{};return{id:d.id,tipo:x.tipo==="entrada"?"entrada":"saida",desc:S(x.desc,100),valor:C(x.valor),data:isoOk(x.data)||"2000-01-01",cat:CATS[x.cat]?x.cat:"outros",eventId:S(x.eventId,200),memberId:S(x.memberId,200),mes:mesOk(x.mes),ref:S(x.ref,220),files:cleanFiles(x.files),ordem:N(x.ordem),createdAt:N(x.createdAt)};},
+  inscricoes:d=>{const x=d.data()||{};return{id:d.id,eventId:S(x.eventId,200),evKey:S(x.evKey,40),name:S(x.name,60)||"?",fone:S(x.fone,30),qtd:Math.min(20,Math.max(1,Math.round(N(x.qtd))||1)),valor:C(x.valor),arquivoId:S(x.arquivoId,200),arquivoType:S(x.arquivoType,60),status:["pendente","confirmado","recusado"].includes(x.status)?x.status:"pendente",partId:S(x.partId,200),createdAt:N(x.createdAt)};},
   participantes:d=>{const x=d.data()||{};return{id:d.id,eventId:S(x.eventId,200),name:S(x.name,60),valor:C(x.valor),confirmado:!!x.confirmado,pago:!!x.pago,forma:FORMAS[x.forma]?x.forma:"pix",data:isoOk(x.data),obs:S(x.obs,120),movId:S(x.movId,200),ordem:N(x.ordem),createdAt:N(x.createdAt)};},
   compras:d=>{const x=d.data()||{};const rp={};if(x.rateioPagos&&typeof x.rateioPagos==="object")for(const[k,v]of Object.entries(x.rateioPagos))if(isoOk(v))rp[S(k,200)]=v;return{rateio:!!x.rateio,rateioIds:Array.isArray(x.rateioIds)?x.rateioIds.slice(0,40).map(v=>S(v,200)):[],rateioPagos:rp,id:d.id,eventId:S(x.eventId,200),cat:GCATS[x.cat]?x.cat:guessCat(x.item),catSet:!!x.catSet,item:S(x.item,80),valor:C(x.valor),quem:S(x.quem,200)||"caixa",reembolso:C(x.reembolso),reembolsado:!!x.reembolsado,reembData:isoOk(x.reembData),data:isoOk(x.data),obs:S(x.obs,120),files:cleanFiles(x.files),movId:S(x.movId,200),ordem:N(x.ordem),createdAt:N(x.createdAt)};},
   pagamentos:d=>{const x=d.data()||{};return{id:d.id,memberId:S(x.memberId,200),mes:mesOk(x.mes),valor:C(x.valor),data:isoOk(x.data),files:cleanFiles(x.files),status:["pendente","aprovado","recusado"].includes(x.status)?x.status:"pendente",movId:S(x.movId,200),createdAt:N(x.createdAt)};},
@@ -1416,6 +1438,7 @@ render();
   sub("compras","c",v=>comps=v);
   sub("checklist","k",v=>checks=v);
   sub("pagamentos","g",v=>pags=v);
+  sub("inscricoes","i",v=>inscs=v);
 })();
 })();
 </script>
