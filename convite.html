@@ -222,7 +222,7 @@ function copiaCapa(src){return new Promise(function(res){try{if(!src||!window.Cl
 function avisoPC(t){var d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#16a34a;color:#fff;padding:14px 18px;border-radius:14px;font:600 17px Oswald,sans-serif;z-index:99;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5)";document.body.append(d);setTimeout(function(){d.remove();},6000);}
 document.getElementById("btnShare").addEventListener("click",async function(){
   var src=document.getElementById("capa").src||"",f=src.indexOf("data:")===0?capaFile(src,"convite-rooftop.jpg"):null;
-  if(/iPhone|iPad|Android/i.test(navigator.userAgent)&&f&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:shareTxt+" "+location.href});return;}catch(e){if(e&&e.name==="AbortError")return;}}
+  if(/iPhone|iPad|Android/i.test(navigator.userAgent)&&f&&navigator.canShare&&navigator.canShare({files:[f]})){try{navigator.clipboard&&navigator.clipboard.writeText(shareTxt+" "+location.href).catch(function(){});}catch(e){}avisoPC("Texto copiado: na foto, toque na legenda e cole");try{await navigator.share({files:[f]});return;}catch(e){if(e&&e.name==="AbortError")return;}}
   var mobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
   if(!mobile&&await copiaCapa(src)){avisoPC("Capa copiada! No WhatsApp, escolha o contato e aperte Ctrl+V para colar a foto.");window.open("https://web.whatsapp.com/send?text="+encodeURIComponent(shareTxt+" "+location.href),"_blank");return;}
   if(navigator.share){try{await navigator.share({title:document.title,text:shareTxt,url:location.href});return;}catch(e){if(e&&e.name==="AbortError")return;}}
