@@ -3,6 +3,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0b0b0f">
 <title>Convite – Rooftop Interlagos</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rooftop Interlagos">
+<meta property="og:title" content="Convite – Rooftop Interlagos">
+<meta property="og:description" content="Toque para ver o convite, pagar pelo Pix e enviar o comprovante.">
+<meta property="og:image" content="https://marciospeedcam.github.io/rooftop/convite-og.jpg">
+<meta property="og:image:width" content="800">
+<meta property="og:image:height" content="800">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Cinzel:wght@900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
@@ -210,7 +217,10 @@ window.addEventListener("hashchange",function(){location.reload();});
 })();
 /* ---------- compartilhar ---------- */
 var shareTxt="Convite: "+op.title+" · "+op.date+" – Rooftop Interlagos\nR$ "+op.price+" por pessoa. Pague pelo Pix e envie o comprovante pelo link:";
+function capaFile(src,nome){try{var p=src.split(","),b=atob(p[1]),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new File([u],nome,{type:"image/jpeg"});}catch(e){return null;}}
 document.getElementById("btnShare").addEventListener("click",async function(){
+  var src=document.getElementById("capa").src||"",f=src.indexOf("data:")===0?capaFile(src,"convite-rooftop.jpg"):null;
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:shareTxt+" "+location.href});return;}catch(e){if(e&&e.name==="AbortError")return;}}
   if(navigator.share){try{await navigator.share({title:document.title,text:shareTxt,url:location.href});return;}catch(e){if(e&&e.name==="AbortError")return;}}
   try{await navigator.clipboard.writeText(shareTxt+" "+location.href);this.textContent="Link copiado ✓";var b=this;setTimeout(function(){b.textContent="Compartilhar convite";},2500);}catch(e){location.href="https://wa.me/?text="+encodeURIComponent(shareTxt+" "+location.href);}
 });

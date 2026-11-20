@@ -700,7 +700,7 @@ const TCODE={churrasco:"q",f1:"f1",festa:"fe",outro:"ou"};
 function evKey(e){if(!e||!e.date)return"";const[y,m,d]=e.date.split("-");return d+m+"-"+Math.round((e.convite||0)/100)+"-"+(TCODE[e.tipo]||"ou");}
 function autoLink(e){if(!e.date)return"";return CONVITE_BASE+"#ev-"+evKey(e)+"-"+e.id;}
 function inscPend(evId){const e=evById(evId);if(!e)return[];const k=evKey(e);return inscs.filter(i=>i.status==="pendente"&&(i.eventId?i.eventId===evId:(k&&i.evKey===k)));}
-async function shareEv(e){const url=effLink(e);const txt=rsMsg.replace(/\n👉 .*$/,"");if(navigator.share){try{await navigator.share({title:e.name,text:txt,url:url||undefined});return;}catch(er){if(er&&er.name==="AbortError")return;}}location.href="https://wa.me/?text="+encodeURIComponent(rsMsg);}
+async function shareEv(e){const url=effLink(e);const txt=rsMsg.replace(/\n👉 .*$/,"");const cu=coverUrl(e);let f=null;if(cu&&cu.startsWith("data:")){try{const b=atob(cu.split(",")[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);f=new File([u],"convite-rooftop.jpg",{type:"image/jpeg"});}catch(er){}}if(f&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:rsMsg});return;}catch(er){if(er&&er.name==="AbortError")return;}}if(navigator.share){try{await navigator.share({title:e.name,text:txt,url:url||undefined});return;}catch(er){if(er&&er.name==="AbortError")return;}}location.href="https://wa.me/?text="+encodeURIComponent(rsMsg);}
 function effLink(e){return e.link&&!e.link.startsWith(CONVITE_BASE)?e.link:autoLink(e);}
 const coverCache={};let posterLogo=null,posterReady=false;
 function coverUrl(e){
